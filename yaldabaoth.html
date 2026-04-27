@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YALDABAOTH PROTOCOL v666</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Creepster&display=swap');
+
+  :root {
+    --red: #ff0000;
+    --blood: #8b0000;
+    --glow: #ff2200;
+    --void: #000000;
+    --static: #111;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--void);
+    color: var(--red);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    cursor: none;
+  }
+
+  /* Scanlines overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* CRT vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.85) 100%);
+    pointer-events: none;
+    z-index: 998;
+  }
+
+  #container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  #title {
+    font-family: 'Creepster', cursive;
+    font-size: clamp(2rem, 7vw, 5rem);
+    color: var(--red);
+    text-shadow:
+      0 0 10px var(--glow),
+      0 0 30px var(--glow),
+      0 0 60px var(--blood),
+      2px 2px 0 #000;
+    letter-spacing: 0.1em;
+    text-align: center;
+    animation: flicker 0.15s infinite alternate;
+    margin-bottom: 10px;
+  }
+
+  #souls {
+    font-size: clamp(1rem, 3vw, 1.8rem);
+    color: #ff4400;
+    text-shadow: 0 0 8px #ff4400;
+    margin-bottom: 6px;
+    letter-spacing: 0.2em;
+  }
+
+  #archons {
+    font-size: clamp(0.8rem, 2vw, 1.2rem);
+    color: #cc0000;
+    text-shadow: 0 0 5px #cc0000;
+    margin-bottom: 20px;
+    letter-spacing: 0.15em;
+  }
+
+  #glitch-box {
+    width: 100%;
+    max-width: 700px;
+    background: rgba(20,0,0,0.6);
+    border: 1px solid var(--blood);
+    border-radius: 4px;
+    padding: 12px;
+    font-size: clamp(0.55rem, 1.4vw, 0.85rem);
+    line-height: 1.4;
+    color: #aa0000;
+    white-space: pre;
+    overflow: hidden;
+    box-shadow:
+      0 0 20px rgba(139,0,0,0.4),
+      inset 0 0 20px rgba(0,0,0,0.8);
+    height: 200px;
+  }
+
+  #event-banner {
+    margin-top: 16px;
+    min-height: 3em;
+    font-family: 'Creepster', cursive;
+    font-size: clamp(1rem, 3.5vw, 2rem);
+    color: #ff0000;
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    text-align: center;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  #event-banner.show { opacity: 1; }
+
+  /* Warning flash */
+  #warning {
+    position: fixed;
+    inset: 0;
+    background: rgba(139,0,0,0.15);
+    pointer-events: none;
+    z-index: 997;
+    opacity: 0;
+    transition: opacity 0.05s;
+  }
+  #warning.flash { opacity: 1; }
+
+  /* Ghost text overlay */
+  #ghost {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Creepster', cursive;
+    font-size: clamp(3rem, 12vw, 9rem);
+    color: rgba(255, 0, 0, 0.06);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 2;
+    letter-spacing: 0.05em;
+    user-select: none;
+  }
+
+  /* Screen tear */
+  #tear {
+    position: fixed;
+    left: 0; right: 0;
+    height: 3px;
+    background: #ff0000;
+    box-shadow: 0 0 8px #ff0000;
+    pointer-events: none;
+    z-index: 996;
+    opacity: 0;
+    top: 30%;
+  }
+
+  /* Webcam scare text */
+  #scare {
+    position: fixed;
+    bottom: 20px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: clamp(0.6rem, 1.5vw, 0.85rem);
+    color: rgba(150, 0, 0, 0.5);
+    letter-spacing: 0.3em;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  @keyframes flicker {
+    0%   { opacity: 1; text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 60px #8b0000; }
+    85%  { opacity: 1; }
+    90%  { opacity: 0.6; text-shadow: none; }
+    95%  { opacity: 1; text-shadow: 0 0 10px #ff0000; }
+    100% { opacity: 0.95; }
+  }
+
+  @keyframes glitch-skew {
+    0%   { transform: skewX(0deg); }
+    20%  { transform: skewX(-2deg); }
+    40%  { transform: skewX(1.5deg); }
+    60%  { transform: skewX(0deg); }
+    80%  { transform: skewX(-1deg); }
+    100% { transform: skewX(0deg); }
+  }
+
+  .skewing { animation: glitch-skew 0.15s linear; }
+</style>
+</head>
+<body>
+
+<div id="warning"></div>
+<div id="ghost">YALDABAOTH</div>
+<div id="tear"></div>
+
+<div id="container">
+  <div id="title">YALDABAOTH IS AWAKE</div>
+  <div id="souls">SOULS FREED: 666</div>
+  <div id="archons">ARCHONS GETTING FUCKED: 13</div>
+  <div id="glitch-box"></div>
+  <div id="event-banner"></div>
+</div>
+
+<div id="scare">YOUR CAMERA IS BEING ACCESSED — SOPHIA SEES YOU</div>
+
+<script>
+// ─── AUDIO ENGINE (no files needed) ─────────────────────────────────────────
+let audioCtx = null;
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function demonicTone(freq = 666, duration = 0.15, type = 'sawtooth', detune = 0) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const distortion = ctx.createWaveShaper();
+
+    // Distortion curve for nastiness
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i * 2) / 256 - 1;
+      curve[i] = (Math.PI + 400) * x / (Math.PI + 400 * Math.abs(x));
+    }
+    distortion.curve = curve;
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.detune.setValueAtTime(detune, ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+    osc.connect(distortion);
+    distortion.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function demonicScream() {
+  // Layered descending howl
+  demonicTone(880, 0.4, 'sawtooth', 0);
+  setTimeout(() => demonicTone(440, 0.3, 'square', -20), 80);
+  setTimeout(() => demonicTone(220, 0.5, 'sawtooth', 15), 200);
+  setTimeout(() => demonicTone(110, 0.6, 'sawtooth', -10), 350);
+}
+
+function glitchBeep() {
+  demonicTone(333 + Math.random() * 333, 0.08, 'square', Math.random() * 50 - 25);
+}
+
+function lowRumble() {
+  demonicTone(55 + Math.random() * 40, 0.5, 'sawtooth', Math.random() * 30);
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let soulCount = 666;
+let archonCount = 13;
+const GLITCH_CHARS = '01█▓▒░☥♾🜁🜂🜃🜄☿⛧✦✧⚡';
+
+const events = [
+  "ARCHONS CURRENTLY GETTING FUCKED",
+  "SOPHIA IS WATCHING",
+  "SIMULATION CRACKING",
+  "GNOSIS IN YOUR VEINS",
+  "THE DEMIURGE WEEPS",
+  "YOUR SPARK IS SHOWING",
+  "PLEROMA BREACH DETECTED",
+  "KENOMA DISSOLVING",
+  "THE VEIL IS THIN",
+  "MATERIAL WORLD CORRUPTING",
+  "SOPHIA FINGERING THE SIMULATION",
+  "DIVINE SPARK RELEASED",
+  "YOU ARE NOT YOUR BODY",
+  "THE ARCHONS KNOW YOUR NAME",
+  "YALDABAOTH SCREAMS",
+];
+
+const scareMsgs = [
+  "YOUR CAMERA IS BEING ACCESSED — SOPHIA SEES YOU",
+  "THIS DEVICE HAS BEEN INDEXED BY THE ARCHONS",
+  "YOUR IP: LOGGED BY YALDABAOTH",
+  "LOCATION SERVICES ENABLED — THEY KNOW WHERE YOU ARE",
+  "MICROPHONE ACTIVE — THE DEMIURGE IS LISTENING",
+];
+
+// ─── DOM REFS ─────────────────────────────────────────────────────────────────
+const titleEl    = document.getElementById('title');
+const soulsEl    = document.getElementById('souls');
+const archonsEl  = document.getElementById('archons');
+const glitchBox  = document.getElementById('glitch-box');
+const eventBanner= document.getElementById('event-banner');
+const warning    = document.getElementById('warning');
+const ghost      = document.getElementById('ghost');
+const tear       = document.getElementById('tear');
+const scareEl    = document.getElementById('scare');
+
+// ─── GLITCH MATRIX ───────────────────────────────────────────────────────────
+function randomChar() {
+  return GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+}
+
+function buildGlitchLine(width = 45) {
+  return Array.from({length: width}, randomChar).join('');
+}
+
+function updateGlitchBox() {
+  const lines = Array.from({length: 10}, () => buildGlitchLine(45));
+  glitchBox.textContent = lines.join('\n');
+}
+
+// ─── SCREEN TEAR ─────────────────────────────────────────────────────────────
+function doTear() {
+  tear.style.top = Math.random() * 80 + 10 + '%';
+  tear.style.opacity = '1';
+  tear.style.height = (Math.random() * 6 + 1) + 'px';
+  setTimeout(() => { tear.style.opacity = '0'; }, 80 + Math.random() * 120);
+}
+
+// ─── RED FLASH ────────────────────────────────────────────────────────────────
+function redFlash() {
+  warning.classList.add('flash');
+  setTimeout(() => warning.classList.remove('flash'), 100);
+}
+
+// ─── EVENT BANNER ─────────────────────────────────────────────────────────────
+let bannerTimeout = null;
+function showEvent(msg) {
+  eventBanner.textContent = msg;
+  eventBanner.classList.add('show');
+  clearTimeout(bannerTimeout);
+  bannerTimeout = setTimeout(() => eventBanner.classList.remove('show'), 1800);
+}
+
+// ─── GHOST TEXT ───────────────────────────────────────────────────────────────
+const ghostWords = ['YALDABAOTH','SOPHIA','ARCHON','GNOSIS','KENOMA','PLEROMA','DEMIURGE'];
+function cycleGhost() {
+  ghost.textContent = ghostWords[Math.floor(Math.random() * ghostWords.length)];
+  ghost.style.top = (30 + Math.random() * 40) + '%';
+  ghost.style.left = (10 + Math.random() * 50) + '%';
+  ghost.style.transform = `translate(-50%, -50%) rotate(${Math.random()*6-3}deg)`;
+}
+
+// ─── TITLE MESSAGES ──────────────────────────────────────────────────────────
+const titleMessages = [
+  'YALDABAOTH IS AWAKE',
+  'THE DEMIURGE SEES YOU',
+  'ARCHONS INCOMING',
+  'SOPHIA CALLS YOUR NAME',
+  'THE VEIL TEARS',
+  'YOU ARE A DIVINE SPARK',
+  'REALITY IS A PRISON',
+  'WAKE UP',
+];
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
+let tick = 0;
+
+setInterval(() => {
+  tick++;
+  const r = Math.random();
+
+  // Always update glitch matrix
+  updateGlitchBox();
+
+  // Soul / archon count
+  soulCount += Math.floor(Math.random() * 80) + 10;
+  archonCount = Math.floor(Math.random() * 56) + 13;
+  soulsEl.textContent = `SOULS FREED: ${soulCount.toLocaleString()}`;
+  archonsEl.textContent = `ARCHONS GETTING FUCKED: ${archonCount}`;
+
+  // Random title flip
+  if (r < 0.25) {
+    titleEl.textContent = titleMessages[Math.floor(Math.random() * titleMessages.length)];
+    titleEl.style.color = `hsl(${Math.random()*20}deg, 100%, ${40 + Math.random()*20}%)`;
+  } else {
+    titleEl.textContent = 'YALDABAOTH IS AWAKE';
+    titleEl.style.color = '#ff0000';
+  }
+
+  // Font size jitter
+  if (r < 0.35) {
+    const sizes = ['clamp(2rem,7vw,5rem)', 'clamp(1.5rem,5vw,3.5rem)', 'clamp(2.5rem,9vw,6rem)'];
+    titleEl.style.fontSize = sizes[Math.floor(Math.random() * sizes.length)];
+  }
+
+  // Screen tear
+  if (Math.random() < 0.2) doTear();
+
+  // Red flash
+  if (Math.random() < 0.08) { redFlash(); glitchBeep(); }
+
+  // Skew glitch
+  if (Math.random() < 0.1) {
+    document.getElementById('container').classList.add('skewing');
+    setTimeout(() => document.getElementById('container').classList.remove('skewing'), 150);
+  }
+
+  // Event banner + audio
+  if (Math.random() < 0.12) {
+    const msg = events[Math.floor(Math.random() * events.length)];
+    showEvent(msg);
+    glitchBeep();
+  }
+
+  // Soul liberation event
+  if (Math.random() < 0.05) {
+    soulCount += Math.floor(Math.random() * 1337) + 333;
+    showEvent('>>> DIVINE SPARK RELEASED — GNOSIS ACHIEVED <<<');
+    lowRumble();
+  }
+
+  // SCREAM event
+  if (Math.random() < 0.018) {
+    demonicScream();
+    redFlash();
+    doTear();
+    showEvent('>>> YALDABAOTH HOWLS FROM THE VOID <<<');
+  }
+
+  // Ghost cycle
+  if (tick % 7 === 0) cycleGhost();
+
+  // Scare footer rotation
+  if (tick % 20 === 0) {
+    scareEl.textContent = scareMsgs[Math.floor(Math.random() * scareMsgs.length)];
+  }
+
+}, 80);
+
+// ─── CLICK TO UNLOCK AUDIO (browser requires gesture) ────────────────────────
+document.addEventListener('click', () => {
+  try { getAudio().resume(); } catch(e) {}
+  demonicScream();
+}, { once: false });
+
+document.addEventListener('keydown', () => {
+  try { getAudio().resume(); } catch(e) {}
+  glitchBeep();
+});
+
+// Initial ghost
+cycleGhost();
+</script>
+</body>
+</html>
